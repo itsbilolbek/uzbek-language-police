@@ -18,7 +18,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text("Ushbu Telegram bot yozishmalarda ruscha va inglizcha so'zlar ishlatilgan xabarlarni aniqlab, foydalanuvchilarga o'zbek tilidagi muqobil so'zlarni tavsiya etadi")
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     print(update)
 
@@ -28,6 +28,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = re.sub(r'"[^"]*"', '', text)  # remove text with quotation marks. Bot ignores all the text in quotes
     text = text.translate(str.maketrans('', '', string.punctuation))  # removes all punctuation from the text
 
+    text = text.lower()
     text = text.split(" ")
 
     conn = sqlite3.connect('dictionary.db')
@@ -53,7 +54,7 @@ def main():
     application.add_handler(CommandHandler("help", help_command))
 
     # on non command i.e message - echo the message on Telegram
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND , chat_message_handler))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
