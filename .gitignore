@@ -164,3 +164,4 @@ api_token.py
 
 # Temporary files
 temp*
+log.txt

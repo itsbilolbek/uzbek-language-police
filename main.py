@@ -20,7 +20,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
-    print(update)
+    with open("log.txt", "a") as log:
+        log.write(update.__str__() + '\n')
 
     text = update.message.text
     mistakes = {}
