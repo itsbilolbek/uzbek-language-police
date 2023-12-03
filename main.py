@@ -23,7 +23,8 @@ async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     print(update)
 
     text = update.message.text
-    mistakes = []
+    mistakes = {}
+    message = "O'zbekcha gapir!"
 
     text = re.sub(r'"[^"]*"', '', text)  # remove text with quotation marks. Bot ignores all the text in quotes
     text = text.translate(str.maketrans('', '', string.punctuation))  # removes all punctuation from the text
@@ -34,15 +35,46 @@ async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     conn = sqlite3.connect('dictionary.db')
     cursor = conn.cursor()
 
-    for word in text:
-        cursor.execute("SELECT translation FROM dictionary WHERE word = ?", (word,))
+    # search for two word tokens
+    i = 0
+    while i < len(text) - 1:
+        cursor.execute(f"SELECT word, translation FROM dictionary WHERE wordCount = 2 AND wholeWord = FALSE AND '{text[i] + ' ' + text[i + 1]}' LIKE word || '%'")
         result = cursor.fetchone()
 
         if result:
-            mistakes.append(f"* {word} - {result[0]}")
+            text.pop(i + 1)
+            text.pop(i)
+            i -= 1
+
+            if result[0] not in mistakes.keys():
+                mistakes[result[0]] = result[1]
+                message = message + f"\n* {result[0]} - {result[1]}"
+        
+        i += 1
+            
+    i = 0
+    while i < len(text):
+        # Search for whole words. Do not count words that start with 'prefix'
+        cursor.execute("SELECT word, translation FROM dictionary WHERE wordCount = 1 AND word = ? AND wholeWord = TRUE", (text[i],))
+        result = cursor.fetchone()
+
+        if not result:
+            # Search for words that start with a 'prefix'. Counts multiple variations of a single base word (e. g., translate, translated, translating, ...)
+            cursor.execute(f"SELECT word, translation FROM dictionary WHERE wholeWord = FALSE AND '{text[i]}' LIKE word || '%'")
+            result = cursor.fetchone()
+
+        if result:
+            text.pop(i)
+            i -= 1
+
+            if result[0] not in mistakes.keys():
+                mistakes[result[0]] = result[1]
+                message = message + f"\n* {result[0]} - {result[1]}"
+        
+        i += 1
 
     if mistakes:
-        await update.message.reply_text("O'zbekcha gapir!\n" + '\n'.join(mistakes))
+        await update.message.reply_text(message)
 
     conn.close()
 

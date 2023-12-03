@@ -161,3 +161,6 @@ cython_debug/
 
 # HTTP API token
 api_token.py
+
+# Temporary files
+temp*
