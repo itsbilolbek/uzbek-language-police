@@ -27,7 +27,7 @@ async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     message = "O'zbekcha gapir!"
 
     text = re.sub(r'"[^"]*"', '', text)  # remove text with quotation marks. Bot ignores all the text in quotes
-    text = text.translate(str.maketrans('', '', string.punctuation))  # removes all punctuation from the text
+    text = text.translate(str.maketrans('', '', string.punctuation + "0123456789"))  # removes all punctuation from the text
 
     text = text.lower()
     text = text.split(" ")
