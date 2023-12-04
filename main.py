@@ -1,5 +1,5 @@
 import logging
-import json
+import csv
 import re, string, sqlite3
 from telegram import Update, ForceReply
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -92,10 +92,13 @@ async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     text = update.message.text.translate(str.maketrans({"\n": "\\n"}))
 
     with open("log.txt", "a") as file:
+        writer = csv.writer(file, delimiter="\t", quotechar="\"")
         if update.effective_chat.type == "private":
-            file.write(f'{update.message.date.isoformat(" ")} - {update.message.chat.type} - FROM: {update.message.from_user.username} - TEXT: {text} - REPLY: {message}\n')
+            writer.writerow([update.message.date.isoformat(" "), update.message.from_user.username, text, message, update.message.chat.type])
+            # file.write(f'{update.message.date.isoformat(" ")} - {update.message.chat.type} - FROM: {update.message.from_user.username} - TEXT: {text} - REPLY: {message}\n')
         else:
-            file.write(f'{update.message.date.isoformat(" ")} - {update.message.chat.type}: {update.message.chat.title} - FROM: {update.message.from_user.username} - TEXT: {text} - REPLY: {message}\n')
+            writer.writerow([update.message.date.isoformat(" "), update.message.from_user.username, text, message, update.message.chat.type, update.message.chat.title])
+            # file.write(f'{update.message.date.isoformat(" ")} - {update.message.chat.type}: {update.message.chat.title} - FROM: {update.message.from_user.username} - TEXT: {text} - REPLY: {message}\n')
 
 def main():
     application = Application.builder().token(TOKEN).build()
