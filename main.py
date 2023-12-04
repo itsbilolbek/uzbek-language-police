@@ -1,8 +1,19 @@
 import logging
+import json
 import re, string, sqlite3
 from telegram import Update, ForceReply
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from api_token import TOKEN
+
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+# set higher logging level for httpx to avoid all GET and POST requests being logged
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
@@ -20,12 +31,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
-    with open("log.txt", "a") as log:
-        log.write(update.__str__() + '\n')
 
     text = update.message.text
     mistakes = {}
-    message = "O'zbekcha gapir!"
+    message = ""
 
     text = re.sub(r'"[^"]*"', '', text)  # remove text with quotation marks. Bot ignores all the text in quotes
     text = text.translate(str.maketrans('', '', string.punctuation + "0123456789"))  # removes all punctuation from the text
@@ -78,6 +87,15 @@ async def chat_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text(message)
 
     conn.close()
+
+    message = message.translate(str.maketrans({"\n": "\\n"}))
+    text = update.message.text.translate(str.maketrans({"\n": "\\n"}))
+
+    with open("log.txt", "a") as file:
+        if update.effective_chat.type == "private":
+            file.write(f'{update.message.date.isoformat(" ")} - {update.message.chat.type} - FROM: {update.message.from_user.username} - TEXT: {text} - REPLY: {message}\n')
+        else:
+            file.write(f'{update.message.date.isoformat(" ")} - {update.message.chat.type}: {update.message.chat.title} - FROM: {update.message.from_user.username} - TEXT: {text} - REPLY: {message}\n')
 
 def main():
     application = Application.builder().token(TOKEN).build()
